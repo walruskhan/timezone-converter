@@ -32,6 +32,13 @@
             background-color: #0d6efd;
             color: white;
         }
+
+        .datetime-picker {
+            display: flex;
+            flex: row;
+            gap: 2;
+            width: 250px;
+        }
     </style>
 </head>
 <body>
@@ -55,18 +62,18 @@
         </div>
     </div>
 
-
-
-
     <span>When it is</span>
-    <input type="datetime-local" class="form-control" id="datetimeInput">
+    <div class="datetime-picker">
+        <input type="date" class="form-control" id="date">
+        <input type="time" class="form-control" id="time">
+    </div>
     <span>In</span>
-    <span id="from-timezone"></span>
+    <span id="from-timezone-label"></span>
     <span>Then in</span>
-    <span id="to-timezone"></span>
+    <span id="to-timezone-label"></span>
     <span>The time is:</span>
 
-    <h2>some time/date</h2>
+    <h2 id="converted-datetime">some time/date</h2>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
@@ -1544,13 +1551,13 @@
         globalThis.fromTimezone = undefined;
         globalThis.toTimezone = undefined;
 
-        const updateTimezoneListOnSearchChange = (text, el) => {
-            el.innerHTML = '';
-            filterTimezones(text).forEach(timezone => {
+        const updateTimezoneListOnSearchChange = (searchboxEl, timezonesEl) => {
+            timezonesEl.innerHTML = '';
+            filterTimezones(searchboxEl.value).forEach(timezone => {
                 const li = document.createElement('li');
                 li.textContent = timezone.text;
                 li.setAttribute('data-id', timezone.abbr);
-                el.appendChild(li);
+                timezonesEl.appendChild(li);
             });
         }
 
@@ -1565,52 +1572,95 @@
             
             // Mark the clicked item as selected
             el.classList.add('selected');
+
+            calculateDestTime();
         }
 
+        const calculateDestTime = () => {
+            const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
+
+            // Combine date and time into a single Date object
+            const dateTimeString = `${dateInput.value}T${timeInput.value}:00`; // ISO format
+            const utcDate = new Date(dateTimeString);
+
+            const offsetHours = globalThis.toTimezone.offset - globalThis.fromTimezone.offset;
+            const convertedDate = new Date(utcDate.getTime() + (offsetHours * 60 * 60 * 1000));
+            document.getElementById('converted-datetime').textContent = convertedDate.toLocaleString();
+
+            console.log("Calculated Date", utcDate, convertedDate, offsetHours)
+        }
+
+        // Add event listeners for date and time input changes
         document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
+            
+            dateInput.addEventListener('change', calculateDestTime);
+            timeInput.addEventListener('input', calculateDestTime);
+
+            calculateDestTime();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const fromTimezoneLabel = document.getElementById("from-timezone-label")
+            const toTimezoneLabel = document.getElementById("to-timezone-label")
+
+            // Set current date if date input is empty
+            const dateInput = document.getElementById('date');
+            if (!dateInput.value) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                dateInput.value = `${year}-${month}-${day}`;
+            }
+
+            // Set current time if time input is empty
+            const timeInput = document.getElementById('time');
+            if (!timeInput.value) {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                timeInput.value = `${hours}:${minutes}`;
+            }
+
             // Populate timezones-from
             const timezonesFromList = document.getElementById('timezones-from');
             const fromTimezoneSearch = document.getElementById('from-timezone-search');
-            updateTimezoneListOnSearchChange(fromTimezoneSearch.value, timezonesFromList);
+            updateTimezoneListOnSearchChange(fromTimezoneSearch, timezonesFromList);
             timezonesFromList.addEventListener('click', function(e) {
                 if (e.target.tagName === 'LI') {
                     const tz = timezones.find(x => x.abbr == e.target.getAttribute('data-id'));
                     globalThis.fromTimezone = tz;
 
                     updateTimezoneListOnSelect(tz, e.target, fromTimezoneSearch, timezonesFromList)
+                    fromTimezoneLabel.innerText = tz.text;
                 }
+            });
+            fromTimezoneSearch.addEventListener('input', function() {
+                updateTimezoneListOnSearchChange(fromTimezoneSearch, timezonesFromList);
             });
 
             // Populate timezones-to
             const timezonesToList = document.getElementById('timezones-to');
             const toTimezoneSearch = document.getElementById('to-timezone-search');
-            updateTimezoneListOnSearchChange(toTimezoneSearch.value, timezonesToList);
+            updateTimezoneListOnSearchChange(toTimezoneSearch, timezonesToList);
             timezonesToList.addEventListener('click', function(e) {
                 if (e.target.tagName === 'LI') {
                     const tz = timezones.find(x => x.abbr == e.target.getAttribute('data-id'));
                     globalThis.toTimezone = tz;
 
                     updateTimezoneListOnSelect(tz, e.target, toTimezoneSearch, timezonesToList)
+                    toTimezoneLabel.innerText = tz.text;
                 }
+            });
+            toTimezoneSearch.addEventListener('input', function() {
+                updateTimezoneListOnSearchChange(toTimezoneSearch, timezonesToList);
             });
 
             globalThis.fromTimezone = filterTimezones(fromTimezoneSearch.value)[0] ?? undefined;
             globalThis.toTimezone = filterTimezones(toTimezoneSearch.value)[0] ?? undefined;
-        });
-
-        document.getElementById('from-timezone-search').addEventListener('input', function(e) {
-            const searchText = e.target.value;
-            const filteredTimezones = filterTimezones(searchText);
-            
-            const timezonesFromList = document.getElementById('timezones-from');
-            timezonesFromList.innerHTML = '';
-            
-            filteredTimezones.forEach(timezone => {
-                const li = document.createElement('li');
-                li.textContent = timezone.text;
-                li.setAttribute('data-id', timezone.abbr);
-                timezonesFromList.appendChild(li);
-            });
         });
 
     </script>
