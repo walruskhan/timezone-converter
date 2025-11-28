@@ -1,16 +1,16 @@
 import { Clock8Icon } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
-import timezones from "@/timezones.json";
+import { DateTime } from "luxon";
 
 export interface TimePickerProps {
-  date?: Date;
-  onDateChange?: (date: Date) => void;
+  date?: DateTime;
+  onDateChange?: (date: DateTime) => void;
 }
 
-const timeStringFromDate = (date: Date) => {
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
+const timeStringFromDate = (date: DateTime) => {
+  const hours = date.hour.toString().padStart(2, '0');
+  const minutes = date.minute.toString().padStart(2, '0');
 
   return `${hours}:${minutes}`;
 };
@@ -27,13 +27,18 @@ const TimezonePicker = ({ date, onDateChange }: TimePickerProps) => {
           type="time"
           id="time-picker"
           step="60"
-          defaultValue={timeStringFromDate(date ?? new Date())}
+          defaultValue={timeStringFromDate(date ?? DateTime.local())}
           onChange={(e) => {
             if (onDateChange) {
               const [hours, minutes] = e.target.value.split(':').map(Number);
-              const newDate = new Date(date ?? new Date());
-              newDate.setHours(hours, minutes, 0, 0);
-              onDateChange(newDate);
+
+              
+              const newDate = date ?? DateTime.local();
+              console.log(newDate);
+              onDateChange(newDate.set({
+                hour: hours,
+                minute: minutes
+              }));
             }
           }}
           className="peer bg-background appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"

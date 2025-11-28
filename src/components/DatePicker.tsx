@@ -11,9 +11,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { DateTime } from 'luxon';
 
 export interface DatePickerWithIcon {
-  date?: Date;
+  date?: DateTime;
   placeholder?: string;
 }
 
@@ -22,8 +23,8 @@ const DatePickerWithIconDemo = ({
   placeholder = 'Pick a Date',
 }: DatePickerWithIcon) => {
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(
-    initialDateValue ?? new Date()
+  const [date, setDate] = useState<DateTime | undefined>(
+    initialDateValue ?? DateTime.local()
   );
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const DatePickerWithIconDemo = ({
           >
             <span className="flex items-center">
               <CalendarIcon className="mr-2" />
-              {date ? date.toLocaleDateString() : placeholder}
+              {date ? date.toISODate() : placeholder}
             </span>
             <ChevronDownIcon />
           </Button>
@@ -49,9 +50,9 @@ const DatePickerWithIconDemo = ({
         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
           <Calendar
             mode="single"
-            selected={date}
+            selected={date?.toJSDate()}
             onSelect={(date) => {
-              setDate(date);
+              setDate(DateTime.fromJSDate(date ?? new Date()));
               setOpen(false);
             }}
           />
