@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import { Button } from "@/components/ui/button"
 import './App.css'
+import DatePicker from './components/DatePicker'
+import TimePicker from './components/TimePicker'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -10,6 +10,8 @@ function App() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center">
       <Button>Click me</Button>
+      <DatePicker placeholder='Date' />
+      <TimePicker onDateChange={v => console.log(v)} />
     </div>
   )
 }
