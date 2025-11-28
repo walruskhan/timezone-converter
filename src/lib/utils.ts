@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import timezones from "@/timezones.json";
+import timezones from "../timezones.json";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,6 +15,6 @@ export const getTimezonesByString = (text: string): Timezone[] => {
     tz.value.toLowerCase().includes(normalizedString)
     || tz.abbr.toLowerCase().includes(normalizedString)
     || tz.text.toLowerCase().includes(normalizedString)
-    || tz.utc.find(utc => utc.toLowerCase().includes(normalizedString))
+    || tz.utc.find(utc => utc.replace("_", " ").toLowerCase().includes(normalizedString))
   );
 };
