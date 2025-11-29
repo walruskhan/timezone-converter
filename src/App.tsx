@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
-import './App.css';
 import DatePicker from './components/DatePicker';
 import TimePicker from './components/TimePicker';
+import TimezonePicker from './components/TimezonePicker';
+import './App.css';
 
 function App() {
   return (
@@ -9,6 +10,11 @@ function App() {
       <Button>Click me</Button>
       <DatePicker placeholder="Date" />
       <TimePicker onDateChange={(v) => console.log(v)} />
+
+      <div className="flex flex-row gap-4 m-4">
+        <TimezonePicker />
+        <TimezonePicker />
+      </div>
     </div>
   );
 }

@@ -30,7 +30,7 @@ const TimePicker = ({ date, onDateChange }: TimePickerProps) => {
           defaultValue={timeStringFromDate(date ?? DateTime.local())}
           onChange={(e) => {
             if (onDateChange) {
-               const [hours, minutes] = e.target.value.split(':').map(Number);
+              const [hours, minutes] = e.target.value.split(':').map(Number);
 
               const newDate = (date ?? DateTime.local()).set({
                 hour: hours,

@@ -1,48 +1,50 @@
-import { Clock8Icon } from 'lucide-react';
+import { DateTime, type ToISOTimeDurationOptions } from 'luxon';
+import { useEffect, useMemo, useState } from 'react';
+import { getTimezonesByString } from '../lib/utils';
+import timezones from '../timezones';
+import type { Timezone } from '../timezones';
+import { Input } from './ui/input';
 
-import { Input } from '@/components/ui/input';
-import { DateTime } from "luxon";
-
-export interface TimePickerProps {
-  date?: DateTime;
-  onDateChange?: (date: DateTime) => void;
+export interface TimezonePickerProps {
+  searchText?: string;
+  onTimezoneselected?: (tz: string) => void;
 }
 
-const timeStringFromDate = (date: DateTime) => {
-  const hours = date.hour.toString().padStart(2, '0');
-  const minutes = date.minute.toString().padStart(2, '0');
+interface TimezoneRowProps extends Pick<TimezonePickerProps, 'onTimezoneselected'> {
+  tz: Timezone;
+}
 
-  return `${hours}:${minutes}`;
+const TimezoneRow = ({ tz }: TimezoneRowProps) => {
+  return (
+    <li>
+      <span>{tz.text}</span>
+    </li>
+  );
 };
 
-const TimezonePicker = ({ date, onDateChange }: TimePickerProps) => {
-  return (
-    <div className="w-full max-w-xs space-y-2">
-      <div className="relative">
-        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 peer-disabled:opacity-50">
-          <Clock8Icon className="size-4" />
-          <span className="sr-only">User</span>
-        </div>
-        <Input
-          type="time"
-          id="time-picker"
-          step="60"
-          defaultValue={timeStringFromDate(date ?? DateTime.local())}
-          onChange={(e) => {
-            if (onDateChange) {
-              const [hours, minutes] = e.target.value.split(':').map(Number);
+const TimezonePicker = ({
+  searchText,
+  onTimezoneselected,
+}: TimezonePickerProps) => {
+  const [text, setText] = useState<string>(searchText ?? '');
 
-              
-              const newDate = date ?? DateTime.local();
-              console.log(newDate);
-              onDateChange(newDate.set({
-                hour: hours,
-                minute: minutes
-              }));
-            }
-          }}
-          className="peer bg-background appearance-none pl-9 [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-        />
+  useEffect(() => {
+    setText(searchText ?? '');
+  }, [searchText]);
+
+  const getFilteredTimezones = useMemo(() => {
+    return getTimezonesByString(text);
+  }, [text]);
+
+  return (
+    <div>
+      <Input onChange={(e) => setText(e.target.value)} />
+      <div className="h-[50vh] overflow-scroll">
+        <ul>
+          {getFilteredTimezones.map((tz) => (
+            <TimezoneRow tz={tz} key={tz.value} onTimezoneselected={onTimezoneselected} />
+          ))}
+        </ul>
       </div>
     </div>
   );
